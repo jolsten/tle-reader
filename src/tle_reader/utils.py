@@ -1,5 +1,4 @@
 import datetime
-import re
 
 ALPHA5_MAP = {v: i for i, v in enumerate("0123456789ABCDEFGHJKLMNPQRSTUVWXYZ")}
 ALPHA5_MAP_REV = {i: v for v, i in ALPHA5_MAP.items()}

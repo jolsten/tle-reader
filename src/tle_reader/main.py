@@ -5,40 +5,18 @@ from typing import Sequence, Tuple
 from tle_reader.typing import Classification
 from tle_reader.utils import (
     alpha5_to_number,
+    compute_checksum,
+    datetime_to_epoch,
     epoch_to_datetime,
+    float_to_implied_decimal,
+    float_to_scinot,
     implied_decimal_to_float,
     number_to_alpha5,
     scinot_to_float,
 )
 
-# Line 1
-# Columns 	Example 	Description
-# 1 	1 	Line Number
-# 3-7 	25544 	Satellite Catalog Number
-# 8 	U 	Elset Classification
-# 10-17 	98067A 	International Designator
-# 19-32 	04236.56031392 	Element Set Epoch (UTC) *Note: spaces are acceptable in columns 21 & 22
-# 34-43 	.00020137 	1st Derivative of the Mean Motion with respect to Time
-# 45-52 	00000-0 	2nd Derivative of the Mean Motion with respect to Time (decimal point assumed)
-# 54-61 	16538-3 	B* Drag Term
-# 63 	0 	Element Set Type
-# 65-68 	999 	Element Number
-# 69 	3 	Checksum
-# Line 2
-# Columns 	Example 	Description
-# 1 	2 	Line Number
-# 3-7 	25544 	Satellite Catalog Number
-# 9-16 	51.6335 	Orbit Inclination (degrees)
-# 18-25 	344.7760 	Right Ascension of Ascending Node (degrees)
-# 27-33 	0007976 	Eccentricity (decimal point assumed)
-# 35-42 	126.2523 	Argument of Perigee (degrees)
-# 44-51 	325.9359 	Mean Anomaly (degrees)
-# 53-63 	15.70406856 	Mean Motion (revolutions/day)
-# 64-68 	32890 	Revolution Number at Epoch
-# 69 	6 	Checksum)
 
-
-def read_tle(line1: str, line2: str) -> Tuple[str]:
+def parse_tle(line1: str, line2: str) -> Tuple[str]:
     catalog1 = alpha5_to_number(line1[2:7])
     classification = line1[7]
     intl_des = line1[9:17]
@@ -74,7 +52,7 @@ def read_tle(line1: str, line2: str) -> Tuple[str]:
         "M": M,
         "Md": Md,
         "Mdd": Mdd,
-        "Bstar": Bstar,
+        "bstar": Bstar,
         "type": elset_type,
         "number": element_number,
         "i": i,
@@ -82,7 +60,7 @@ def read_tle(line1: str, line2: str) -> Tuple[str]:
         "e": e,
         "p": p,
         "mu": mu,
-        "revolution_number": revnum,
+        "rev": revnum,
     }
 
 
@@ -108,7 +86,7 @@ class TLE:
     """Right Ascension of the Ascending Node (deg)"""
     e: float
     """Eccentricity"""
-    aop: float
+    p: float
     """Argument of Perigee (deg)"""
     mu: float
     """Mean Anomaly (deg)"""
@@ -118,7 +96,7 @@ class TLE:
     """Mean Motion 1st Derivative (rev/day^2)"""
     Mdd: float
     """Mean Motion 2nd Derivative (rev/day^3)"""
-    rev_num: int
+    rev: int
     """Revolution Number at Epoch"""
 
     @property
@@ -135,5 +113,24 @@ class TLE:
         """TLE Line 2"""
 
     @classmethod
-    def from_lines(cls, lines: Sequence[str]) -> "TLE":
-        pass
+    def from_lines(cls, line1: str, line2: str) -> "TLE":
+        return cls(**parse_tle(line1, line2))
+
+    def to_lines(self) -> Tuple[str, str]:
+        alpha5 = number_to_alpha5(self.catalog)
+        epoch = datetime_to_epoch(self.epoch)
+        Md = f"{self.Md: .8f}"
+        print(Md)
+        Md = Md[0] + Md[2:]
+        print(Md)
+        Mdd = float_to_scinot(self.Mdd)
+        bstar = float_to_scinot(self.bstar)
+
+        line1 = f"1 {alpha5:5}{self.classification} {self.intl_des} {epoch:15} {Md} {Mdd:8} {bstar:8} {self.type} {self.number:4}"
+        line1 = line1 + str(compute_checksum(line1))
+
+        e = float_to_implied_decimal(self.e)
+        line2 = f"2 {alpha5:5} {self.i:8.4f} {self.r:8.4f} {e:7} {self.p:8.4f} {self.mu:8.4f} {self.M:11f}{self.rev:5}"
+        line2 = line2 + str(compute_checksum(line2))
+
+        return line1, line2

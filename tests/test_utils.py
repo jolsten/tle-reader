@@ -1,7 +1,7 @@
 import datetime
 
 import pytest
-from tle_reader.main import read_tle
+from tle_reader.main import TLE, parse_tle
 from tle_reader.utils import (
     EPOCH_TIME_RESOLUTION,
     alpha5_to_number,
@@ -113,5 +113,27 @@ class TestImpliedDecimal:
 )
 class TestParser:
     def test_parse_checksum(self, line1, line2):
-        tle = read_tle(line1, line2)
+        tle = parse_tle(line1, line2)
         assert tle
+
+    def test_tle_from_lines(self, line1, line2):
+        tle = TLE.from_lines(line1, line2)
+        assert tle
+
+
+@pytest.mark.parametrize(
+    "line1, line2",
+    [
+        (
+            "1 25544U 98067A   04236.56031392  .00020137  00000-0  16538-3 0  9993",
+            "2 25544  51.6335 344.7760 0007976 126.2523 325.9359 15.70406856328906",
+        ),
+    ],
+)
+def test_from_to_lines(line1, line2):
+    tle = TLE.from_lines(line1, line2)
+    out_line1, out_line2 = tle.to_lines()
+    print("out1 =", out_line1)
+    print("out2 =", out_line2)
+    assert line1 == out_line1
+    assert line2 == out_line2
