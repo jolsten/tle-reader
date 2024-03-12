@@ -128,12 +128,14 @@ class TestParser:
             "1 25544U 98067A   04236.56031392  .00020137  00000-0  16538-3 0  9993",
             "2 25544  51.6335 344.7760 0007976 126.2523 325.9359 15.70406856328906",
         ),
+        (
+            "1 57493U 23112A   24072.51383775  .00000038  00000-0  00000-0 0  9992",
+            "2 57493   0.0117 156.7511 0002068 187.6725 244.1950  1.00270976  2231",
+        ),
     ],
 )
 def test_from_to_lines(line1, line2):
     tle = TLE.from_lines(line1, line2)
     out_line1, out_line2 = tle.to_lines()
-    print("out1 =", out_line1)
-    print("out2 =", out_line2)
     assert line1 == out_line1
     assert line2 == out_line2

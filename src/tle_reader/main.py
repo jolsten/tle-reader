@@ -120,17 +120,15 @@ class TLE:
         alpha5 = number_to_alpha5(self.catalog)
         epoch = datetime_to_epoch(self.epoch)
         Md = f"{self.Md: .8f}"
-        print(Md)
         Md = Md[0] + Md[2:]
-        print(Md)
         Mdd = float_to_scinot(self.Mdd)
         bstar = float_to_scinot(self.bstar)
 
-        line1 = f"1 {alpha5:5}{self.classification} {self.intl_des} {epoch:15} {Md} {Mdd:8} {bstar:8} {self.type} {self.number:4}"
+        line1 = f"1 {alpha5:5}{self.classification} {self.intl_des} {epoch:14} {Md} {Mdd:8} {bstar:8} {self.type} {self.number:4}"
         line1 = line1 + str(compute_checksum(line1))
 
         e = float_to_implied_decimal(self.e)
-        line2 = f"2 {alpha5:5} {self.i:8.4f} {self.r:8.4f} {e:7} {self.p:8.4f} {self.mu:8.4f} {self.M:11f}{self.rev:5}"
+        line2 = f"2 {alpha5:5} {self.i:8.4f} {self.r:8.4f} {e:7} {self.p:8.4f} {self.mu:8.4f} {self.M:11.8f}{self.rev:5}"
         line2 = line2 + str(compute_checksum(line2))
 
         return line1, line2
