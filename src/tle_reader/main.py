@@ -6,6 +6,7 @@ from tle_reader.typing import Classification
 from tle_reader.utils import (
     alpha5_to_number,
     epoch_to_datetime,
+    implied_decimal_to_float,
     number_to_alpha5,
     scinot_to_float,
 )
@@ -37,16 +38,6 @@ from tle_reader.utils import (
 # 69 	6 	Checksum)
 
 
-def compute_checksum(line: str) -> int:
-    cs = 0
-    for v in line:
-        if v in "-":
-            cs += -1
-        elif v.isnumeric():
-            cs += int(v)
-    return cs % 10
-
-
 def read_tle(line1: str, line2: str) -> Tuple[str]:
     catalog1 = alpha5_to_number(line1[2:7])
     classification = line1[7]
@@ -62,7 +53,7 @@ def read_tle(line1: str, line2: str) -> Tuple[str]:
     catalog2 = alpha5_to_number(line2[2:7])
     i = float(line2[8:16])
     r = float(line2[17:25])
-    e = float(line2[26:33])
+    e = implied_decimal_to_float(line2[26:33])
     p = float(line2[34:42])
     mu = float(line2[43:51])
     M = float(line2[52:63])
@@ -70,7 +61,10 @@ def read_tle(line1: str, line2: str) -> Tuple[str]:
     checksum2 = line1[68]
 
     if catalog1 != catalog2:
-        raise ValueError
+        msg = (
+            f"Catalog number for line 1 {catalog1!r} does not match line 2 {catalog2!r}"
+        )
+        raise ValueError(msg)
 
     return {
         "classification": classification,

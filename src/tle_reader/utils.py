@@ -68,9 +68,15 @@ def float_to_scinot(value: float) -> str:
     return tmp.replace(".", "").replace("e", "").replace("+0", "-0")
 
 
-def e_to_float(value: str) -> float:
+def implied_decimal_to_float(value: str) -> float:
     return float("." + value)
 
 
-def float_to_e(value: float) -> str:
+def float_to_implied_decimal(value: float) -> str:
     return f"{value:.7f}"[-7:]
+
+
+def compute_checksum(line: str) -> int:
+    """Compute the TLE Checksum"""
+    s = line[0:68].replace("-", "1")
+    return sum([int(v) for v in s if v.isnumeric()]) % 10

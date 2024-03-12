@@ -1,15 +1,16 @@
 import datetime
 
 import pytest
-from tle_reader.main import compute_checksum
+from tle_reader.main import read_tle
 from tle_reader.utils import (
     EPOCH_TIME_RESOLUTION,
     alpha5_to_number,
+    compute_checksum,
     datetime_to_epoch,
-    e_to_float,
     epoch_to_datetime,
-    float_to_e,
+    float_to_implied_decimal,
     float_to_scinot,
+    implied_decimal_to_float,
     number_to_alpha5,
     scinot_to_float,
 )
@@ -75,20 +76,6 @@ class TestSciNot:
 
 
 @pytest.mark.parametrize(
-    "e, value",
-    [
-        ("1234567", 0.1234567),
-    ],
-)
-class TestEccentricity:
-    def test_e_to_float(self, e: str, value: float):
-        assert e_to_float(e) == pytest.approx(value)
-
-    def test_float_to_e(self, e: str, value: float):
-        assert e == float_to_e(value)
-
-
-@pytest.mark.parametrize(
     "line",
     [
         "1 25544U 98067A   04236.56031392  .00020137  00000-0  16538-3 0  9993",
@@ -97,4 +84,34 @@ class TestEccentricity:
 )
 class TestChecksum:
     def test_compute_checksum(self, line):
-        assert compute_checksum(line[0:68]) == int(line[68])
+        assert compute_checksum(line) == int(line[68])
+
+
+@pytest.mark.parametrize(
+    "idec, value",
+    [
+        ("1234567", 0.1234567),
+        ("0007976", 0.0007976),
+    ],
+)
+class TestImpliedDecimal:
+    def test_implied_decimal_to_float(self, idec: str, value: float):
+        assert implied_decimal_to_float(idec) == pytest.approx(value)
+
+    def test_float_to_implied_decimal(self, idec: str, value: float):
+        assert float_to_implied_decimal(value) == idec
+
+
+@pytest.mark.parametrize(
+    "line1, line2",
+    [
+        (
+            "1 25544U 98067A   04236.56031392  .00020137  00000-0  16538-3 0  9993",
+            "2 25544  51.6335 344.7760 0007976 126.2523 325.9359 15.70406856328906",
+        ),
+    ],
+)
+class TestParser:
+    def test_parse_checksum(self, line1, line2):
+        tle = read_tle(line1, line2)
+        assert tle
